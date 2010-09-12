@@ -1,17 +1,23 @@
 package com.jpprade.text.detection.panel;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 import javax.swing.WindowConstants;
 import javax.swing.JFrame;
 
+import com.jpprade.text.detection.algo.bean.ConnectedElement;
+
 public class ImagePanel extends javax.swing.JPanel {
 	
 	private BufferedImage image=null;
+	
+	private ArrayList<ConnectedElement> elements=null;
 
 	public BufferedImage getImage() {
 		return image;
@@ -24,20 +30,38 @@ public class ImagePanel extends javax.swing.JPanel {
 		validate();
 		repaint();
 	}
+	
+	public void setConnectedElements(ArrayList<ConnectedElement> el){
+		elements = el;
+		validate();
+		repaint();
+	}
 
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		System.out.println("paintComponent");
+		/*System.out.println("paintComponent");
 		System.out.println(this.getWidth());
-		System.out.println(this.getHeight());
+		System.out.println(this.getHeight());*/
 		if(image != null){
 			//g.drawImage(image, 0,0,this.getWidth(),this.getHeight(), this);
 			g.drawImage(image, 0,0, this);
 		}
-		g.drawString("Un texte", 0, 0);
+		//g.drawString("Un texte", 0, 0);
+		if(elements !=null){
+			g.setColor(new Color(255,10,0));
+			for(ConnectedElement ce : elements){
+				int x1 =ce.getTopleft().getX();
+				int y1 =ce.getTopleft().getY();
+				int x2 =ce.getBottomright().getX();
+				int y2 =ce.getBottomright().getY();
+				
+				g.drawRect(x1, y1, (x2-x1), (y2-y1));
+			}
+		}
 		
 	}
+	
 	
 
 	
@@ -52,13 +76,19 @@ public class ImagePanel extends javax.swing.JPanel {
 	@Override
 	public Dimension getPreferredSize() {
 		Insets insets = getInsets();
-		System.out.println("left "+insets.left);
+		/*System.out.println("left "+insets.left);
 		System.out.println("right "+insets.right);
 		System.out.println("top "+insets.top);
-		System.out.println("bottom "+insets.bottom);
-		int w = insets.left + insets.right + image.getWidth();
-		int h = insets.top + insets.bottom + image.getHeight();
-		return new Dimension(w,h);
+		System.out.println("bottom "+insets.bottom);*/
+		if(image !=null){
+			int w = insets.left + insets.right + image.getWidth();
+			int h = insets.top + insets.bottom + image.getHeight();
+			return new Dimension(w,h);
+		}else{
+			int w = insets.left + insets.right ;
+			int h = insets.top + insets.bottom ;
+			return new Dimension(w,h);
+		}
 
 	}
 
@@ -97,5 +127,7 @@ public class ImagePanel extends javax.swing.JPanel {
 			e.printStackTrace();
 		}
 	}
+	
+	
 
 }

@@ -1,4 +1,10 @@
 package com.jpprade.text.detection;
+import com.jpprade.text.detection.algo.CharCheck;
+import com.jpprade.text.detection.algo.ConnectedDetection;
+import com.jpprade.text.detection.algo.GrayLevel;
+import com.jpprade.text.detection.algo.OtsuBinary;
+import com.jpprade.text.detection.algo.Upscale;
+import com.jpprade.text.detection.algo.bean.ConnectedElement;
 import com.jpprade.text.detection.panel.ImagePanel;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -7,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -28,6 +35,17 @@ public class MainApp extends javax.swing.JFrame {
 
 	private JMenuItem helpMenuItem;
 	private JMenu jMenu5;
+	private JMenuItem connectedMenuItem;
+	private AbstractAction binariseAction;
+	private AbstractAction grayScaleAction;
+	private JMenuItem binarise;
+	private JMenuItem grayScale;
+	private AbstractAction invertAction;
+	private JMenuItem invertMenuItem;
+	private AbstractAction ostuBinaryAction;
+	private JMenuItem otsubinary;
+	private AbstractAction findConnectedAction;
+	private JMenu menuFilter;
 	private ImagePanel imagePanel;
 	private AbstractAction openFile;
 	private JMenuItem deleteMenuItem;
@@ -41,6 +59,8 @@ public class MainApp extends javax.swing.JFrame {
 	private JMenuItem closeFileMenuItem;
 	private JMenuItem saveAsMenuItem;
 	private JMenuItem saveMenuItem;
+	private AbstractAction scaleAction;
+	private JMenuItem scaleMenuItem;
 	private JMenuItem openFileMenuItem;
 	private JMenuItem newFileMenuItem;
 	private JMenu jMenu3;
@@ -67,7 +87,7 @@ public class MainApp extends javax.swing.JFrame {
 	private void initGUI() {
 		try {
 			getContentPane().add(getImagePanel(), BorderLayout.CENTER);
-			setSize(400, 300);
+			this.setSize(600, 500);
 			{
 				jMenuBar1 = new JMenuBar();
 				setJMenuBar(jMenuBar1);
@@ -143,6 +163,7 @@ public class MainApp extends javax.swing.JFrame {
 				{
 					jMenu5 = new JMenu();
 					jMenuBar1.add(jMenu5);
+					jMenuBar1.add(getMenuFilter());
 					jMenu5.setText("Help");
 					{
 						helpMenuItem = new JMenuItem();
@@ -188,6 +209,155 @@ public class MainApp extends javax.swing.JFrame {
 			imagePanel.setLayout(imagePanelLayout);
 		}
 		return imagePanel;
+	}
+	
+	public JMenu getMenuFilter() {
+		if(menuFilter == null) {
+			menuFilter = new JMenu();
+			menuFilter.setText("Filter");
+			menuFilter.add(getGrayScale());
+			menuFilter.add(getInvertMenuItem());
+			menuFilter.add(getBinarise());
+			menuFilter.add(getConnectedMenuItem());
+			menuFilter.add(getOtsubinary());
+			menuFilter.add(getScaleMenuItem());
+		}
+		return menuFilter;
+	}
+	
+	private JMenuItem getGrayScale() {
+		if(grayScale == null) {
+			grayScale = new JMenuItem();
+			grayScale.setText("Gray level");
+			grayScale.setAction(getGrayScaleAction());
+		}
+		return grayScale;
+	}
+	
+	public JMenuItem getBinarise() {
+		if(binarise == null) {
+			binarise = new JMenuItem();
+			binarise.setText("Binarise");
+			binarise.setAction(getBinariseAction());
+		}
+		return binarise;
+	}
+	
+	public AbstractAction getGrayScaleAction() {
+		if(grayScaleAction == null) {
+			grayScaleAction = new AbstractAction("gray scale", null) {
+				public void actionPerformed(ActionEvent evt) {
+					BufferedImage bf = GrayLevel.averageGreyScale(getImagePanel().getImage());
+					getImagePanel().setImage(bf);
+				}
+			};
+		}
+		return grayScaleAction;
+	}
+	
+	public AbstractAction getBinariseAction() {
+		if(binariseAction == null) {
+			binariseAction = new AbstractAction("binarise", null) {
+				public void actionPerformed(ActionEvent evt) {
+					//BufferedImage bf = GrayLevel.averageGreyScale(getImagePanel().getImage());
+					BufferedImage bf = OtsuBinary.averageGreyScale(getImagePanel().getImage());
+					getImagePanel().setImage(bf);
+				}
+			};
+		}
+		return binariseAction;
+	}
+	
+	public JMenuItem getConnectedMenuItem() {
+		if(connectedMenuItem == null) {
+			connectedMenuItem = new JMenuItem();
+			connectedMenuItem.setText("Find connected");
+			connectedMenuItem.setAction(getFindConnectedAction());
+		}
+		return connectedMenuItem;
+	}
+	
+	public AbstractAction getFindConnectedAction() {
+		if(findConnectedAction == null) {
+			findConnectedAction = new AbstractAction("Find connected", null) {
+				public void actionPerformed(ActionEvent evt) {
+					ConnectedDetection cd = new ConnectedDetection();
+					ArrayList<ConnectedElement> elements = cd.getConnectedElement(getImagePanel().getImage());
+					System.out.println("nb connected = "+ elements.size());
+					CharCheck cc = new CharCheck(getImagePanel().getImage(), elements);
+					ArrayList<ConnectedElement> elements2 = cc.getChars();
+					System.out.println("nb connected 2 = "+ elements2.size());
+					//getImagePanel().setConnectedElements(elements);
+					getImagePanel().setConnectedElements(elements2);
+					BufferedImage bi1 = ConnectedDetection.getImage(elements2,getImagePanel().getImage().getWidth(),getImagePanel().getImage().getHeight());
+					getImagePanel().setImage(bi1);
+				}
+			};
+		}
+		return findConnectedAction;
+	}
+	
+	public JMenuItem getOtsubinary() {
+		if(otsubinary == null) {
+			otsubinary = new JMenuItem();
+			otsubinary.setText("Otsu binarisation");
+			otsubinary.setAction(getOstuBinaryAction());
+		}
+		return otsubinary;
+	}
+	
+	public AbstractAction getOstuBinaryAction() {
+		if(ostuBinaryAction == null) {
+			ostuBinaryAction = new AbstractAction("otsuBinaryAction", null) {
+				public void actionPerformed(ActionEvent evt) {
+					BufferedImage bf = OtsuBinary.getOtsuBinary(getImagePanel().getImage());
+					getImagePanel().setImage(bf);
+				}
+			};
+		}
+		return ostuBinaryAction;
+	}
+	
+	public JMenuItem getInvertMenuItem() {
+		if(invertMenuItem == null) {
+			invertMenuItem = new JMenuItem();
+			invertMenuItem.setText("Invert");
+			invertMenuItem.setAction(getInvertAction());
+		}
+		return invertMenuItem;
+	}
+	
+	public AbstractAction getInvertAction() {
+		if(invertAction == null) {
+			invertAction = new AbstractAction("Invert", null) {
+				public void actionPerformed(ActionEvent evt) {
+					BufferedImage bi = GrayLevel.invert(getImagePanel().getImage());
+					getImagePanel().setImage(bi);
+				}
+			};
+		}
+		return invertAction;
+	}
+	
+	public JMenuItem getScaleMenuItem() {
+		if(scaleMenuItem == null) {
+			scaleMenuItem = new JMenuItem();
+			scaleMenuItem.setText("Scale 2x");
+			scaleMenuItem.setAction(getScaleAction());
+		}
+		return scaleMenuItem;
+	}
+	
+	public AbstractAction getScaleAction() {
+		if(scaleAction == null) {
+			scaleAction = new AbstractAction("Scale 2x", null) {
+				public void actionPerformed(ActionEvent evt) {
+					BufferedImage bi = Upscale.upscaleDouble(getImagePanel().getImage(), 2.0);
+					getImagePanel().setImage(bi);
+				}
+			};
+		}
+		return scaleAction;
 	}
 
 }
