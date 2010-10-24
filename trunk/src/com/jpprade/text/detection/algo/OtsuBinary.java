@@ -103,5 +103,103 @@ public class OtsuBinary {
 		BufferedImage image = new BufferedImage(colourModel, wraster, false, null);
 		return image;
 	}
+	
+	public static BufferedImage getOtsuBinaryV2(BufferedImage bi){
+		System.out.println("bi type="+bi.getType());
+		System.out.println("type="+BufferedImage.TYPE_4BYTE_ABGR);
+		BufferedImage res = new BufferedImage(bi.getWidth(),bi.getHeight(),bi.getType());		
+		Raster raster = bi.getData();
+		DataBuffer buffer = raster.getDataBuffer();
+		System.out.println("buffer class="+buffer.getClass().getName());
+		DataBufferByte byteBuffer = (DataBufferByte) buffer;
+		
+		byte b[] = byteBuffer.getData(0);
+		System.out.println("b size="+b.length);
+		
+		int[] histogramme = new int[255];
+		for(int i=0;i<255;i++)
+			histogramme[i]=0;
+		for(int j=0;j<b.length;j=j+4){			
+			//System.out.println("b("+"0"+")["+j+"]="+b[j]);
+			//System.out.println("b("+"0"+")["+j+"]="+ (b[j] & 0xFF));
+			int blue = (b[j+1] & 0xFF);
+			int green = (b[j+2] & 0xFF);
+			int red = (b[j+3] & 0xFF);			
+			int gray = ( red +green + blue) / 3;
+			histogramme[gray]++;
+			
+		}
+		int all = getAll(histogramme);
+		System.out.println("all="+all);
+		int threshold=0;
+		double maxVB=0;
+		for(int i=0;i<histogramme.length;i++){
+			double wb=getWeightBackground(histogramme, i, all);
+			double wf= getWeightForeground(histogramme, i, all);
+			double ub=getMeanBackground(histogramme, i);
+			double uf=getMeanForeground(histogramme, i);
+			if(ub == 0 || uf ==0 )
+				continue;
+			double udiff = (ub-uf);
+			double vb = wb * wf * udiff * udiff ;
+			if(vb > maxVB){
+				maxVB=vb;
+				threshold=i;
+			}
+		}
+		System.out.println("seuil="+threshold);
+		
+		
+		
+		return res;
+	}
+	
+	protected static int getAll(int[] hist){
+		int total=0;
+		for(int i =0;i < hist.length;i++ ){
+			total += hist[i];
+		}
+		return total;
+	}
+	
+	protected static double getWeightBackground(int[] hist,int threshold,int all){
+		int total =0;
+		for(int i =0;i < threshold;i++ ){
+			total += hist[i];
+		}
+		return total / all;		
+	}
+	
+	protected static double getWeightForeground(int[] hist,int threshold, int all){
+		int total =0;
+		for(int i =threshold;i < hist.length;i++ ){
+			total += hist[i];
+		}
+		return total / all;		
+	}
+	
+	protected static double getMeanBackground(int[] hist, int threshold){
+		int mean = 0;
+		int all = 0;
+		for(int i =0;i < threshold;i++ ){
+			mean += i * hist[i];
+			all += hist[i];
+		}
+		if(all == 0)
+			return 0;
+		return mean / all;	
+	}
+	
+	protected static double getMeanForeground(int[] hist, int threshold){
+		int mean = 0;
+		int all = 0;
+		for(int i = threshold;i <hist.length;i++ ){
+			mean += i * hist[i];
+			all += hist[i];
+		}
+		if(all == 0)
+			return 0;
+		return mean / all;	
+	}
 
 }
