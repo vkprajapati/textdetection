@@ -9,8 +9,8 @@ public class CharCheck {
 	
 	int maxchar = 100;
 	int minchar = 5;
-	int maxlines = 20;
-	int minlines = 1;
+	int maxlines = 30;
+	int minlines = 2;
 	int xmax =0;
 	int ymax =0;
 	ArrayList<ConnectedElement> elements;
@@ -78,7 +78,7 @@ public class CharCheck {
 		boolean t1r = T1(ce);
 		if(!t1r)
 			return false;
-		for(int j=0;j<elements.size();j++){
+		/*for(int j=0;j<elements.size();j++){
 			if(elements.get(j) == ce)
 				continue;
 			if(T2(ce,elements.get(j))){
@@ -89,9 +89,9 @@ public class CharCheck {
 				}
 			}
 				
-		}
+		}*/
 		
-		return false;
+		return true;
 	}
 	
 	private  boolean T1(ConnectedElement ce){

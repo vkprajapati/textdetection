@@ -287,9 +287,20 @@ public class MainApp extends javax.swing.JFrame {
 					CharCheck cc = new CharCheck(getImagePanel().getImage(), elements);
 					ArrayList<ConnectedElement> elements2 = cc.getChars();
 					System.out.println("nb connected 2 = "+ elements2.size());
+					
+					ArrayList<ConnectedElement> lines = ConnectedDetection.findLines(elements);
+					
+					System.out.println("nb lines = "+ lines.size());
+					
 					//getImagePanel().setConnectedElements(elements);
-					getImagePanel().setConnectedElements(elements2);
-					BufferedImage bi1 = ConnectedDetection.getImage(elements2,getImagePanel().getImage().getWidth(),getImagePanel().getImage().getHeight());
+					BufferedImage bi1 = ConnectedDetection.getImage(elements,getImagePanel().getImage().getWidth(),getImagePanel().getImage().getHeight());
+					
+					//getImagePanel().setConnectedElements(elements2);
+					//BufferedImage bi1 = ConnectedDetection.getImage(elements2,getImagePanel().getImage().getWidth(),getImagePanel().getImage().getHeight());
+					
+					//lines.addAll(elements);
+					getImagePanel().setConnectedElements(lines);
+					
 					getImagePanel().setImage(bi1);
 				}
 			};
