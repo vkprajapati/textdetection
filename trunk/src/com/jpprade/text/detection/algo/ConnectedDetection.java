@@ -3,6 +3,10 @@ package com.jpprade.text.detection.algo;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.Stack;
 
 import com.jpprade.text.detection.algo.bean.ConnectedElement;
@@ -39,6 +43,22 @@ public class ConnectedDetection {
 				}else{
 					pixels[i][j]=true;
 				}
+			}
+		}
+		//remove element at on the border
+		Iterator<ConnectedElement> it = alce.iterator();
+		while(it.hasNext()){
+			ConnectedElement c =it.next();
+			if(c.getTopleft().getX() ==0 || c.getTopleft().getY() == 0 || c.getBottomright().getX() == (w-1) || c.getBottomright().getY() == (h-1)){
+				it.remove();
+			}
+		}
+		//
+		it = alce.iterator();
+		while(it.hasNext()){
+			ConnectedElement c =it.next();
+			if(! c.isRealRatio()){
+				it.remove();
 			}
 		}
 		
@@ -153,6 +173,111 @@ public class ConnectedDetection {
 			}
 		}
 		return bi;
+	}
+	
+	public static ArrayList<ConnectedElement> findLines(ArrayList<ConnectedElement> elements){
+		//java.util.HashSet<ConnectedElement> hs = new HashSet<ConnectedElement>();
+		HashSet<ConnectedElement> hs = new HashSet<ConnectedElement>();
+		
+		for(ConnectedElement ce1 : elements){
+			boolean overlaping = false;
+			boolean isleftest = true;
+			for(ConnectedElement ce2 : elements){
+				if(ce1 !=ce2){
+					/*if(!overlaping && ce1.isOverlaping(ce2) ){
+						overlaping = true;
+					}*/
+					if(ce1.isOverlaping(ce2)){
+						overlaping = true;
+						if(ce1.isRight(ce2)){					
+							isleftest=false;	
+						}
+					}
+				}
+			}
+			if(!overlaping || isleftest){
+				hs.add(ce1);
+			}
+			
+		}
+		if(true && false)
+			return new ArrayList<ConnectedElement>(hs);
+		
+		HashMap<ConnectedElement,HashSet<ConnectedElement>> lines = new HashMap<ConnectedElement,HashSet<ConnectedElement>>(); 
+		for(ConnectedElement ce1 : hs){
+			for(ConnectedElement ce2 : elements){
+				if(ce1==ce2 || ce1.isOverlaping(ce2)){
+					HashSet<ConnectedElement> h = lines.get(ce1);
+					if(h==null){
+						h = new HashSet<ConnectedElement>();
+						h.add(ce2);
+						lines.put(ce1, h);
+					}else{
+						h.add(ce2);
+					}
+				}
+			}
+		}
+		ArrayList<ConnectedElement> alines = getLines(lines);
+		Iterator<ConnectedElement> iter1 = alines.iterator();
+		Iterator<ConnectedElement> iter2 = alines.iterator();
+		System.out.println("avant =" + alines.size());
+		while(iter1.hasNext()){
+			ConnectedElement ce1 = iter1.next();
+			/*while(iter2.hasNext()){
+				ConnectedElement ce2 = iter2.next();
+				if(ce1==ce2)
+					continue;
+				if(ce1.isContained(ce2)){
+					System.out.println("is contained");
+					iter1.remove();
+					break;
+				}
+			}*/
+			for(ConnectedElement ce2 : alines){
+				if(ce1==ce2)
+					continue;
+				if(ce1.isContained(ce2)){
+					System.out.println("is contained");
+					iter1.remove();
+					break;
+				}
+			}
+		}
+		System.out.println("apres =" + alines.size());
+		
+		return alines;
+	}
+	
+	protected static ArrayList<ConnectedElement> getLines(HashMap<ConnectedElement,HashSet<ConnectedElement>> linesce){
+		ArrayList<ConnectedElement> lines = new ArrayList<ConnectedElement>();
+		Set<ConnectedElement> firsts = linesce.keySet();
+		for(ConnectedElement ce : firsts){
+			HashSet<ConnectedElement> ces = linesce.get(ce);
+			int topLeftX = ce.getTopleft().getX();
+			int topLeftY = ce.getTopleft().getY();
+			int bottomRightX = ce.getBottomright().getX();
+			int bottomRightY = ce.getBottomright().getY();
+			for(ConnectedElement ce1 : ces){
+				if(ce1.getTopleft().getX() < topLeftX)
+					topLeftX = ce1.getTopleft().getX();
+				if(ce1.getTopleft().getY() < topLeftY)
+					topLeftY = ce1.getTopleft().getY();
+				
+				if(ce1.getBottomright().getX() > bottomRightX)
+					bottomRightX = ce1.getBottomright().getX();
+				if(ce1.getBottomright().getY() > bottomRightY)
+					bottomRightY = ce1.getBottomright().getY();
+			}
+			Point tl = new Point(topLeftX, topLeftY);
+			Point br = new Point(bottomRightX, bottomRightY);
+			ConnectedElement c = new ConnectedElement();
+			c.setTopleft(tl);
+			c.setBottomright(br);
+			lines.add(c);
+			
+		}
+		return lines;
 	}
 
 }
